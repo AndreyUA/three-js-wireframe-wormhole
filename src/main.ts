@@ -1,6 +1,7 @@
 import "./style.css";
 
 import * as THREE from "three";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
 // Canvas
 const canvas = document.querySelector("canvas.webgl") as HTMLCanvasElement;
@@ -24,6 +25,11 @@ const camera = new THREE.PerspectiveCamera(
 camera.position.z = 3;
 scene.add(camera);
 
+// Controls
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true;
+controls.dampingFactor = 0.03;
+
 // TODO: remove this
 const geometry = new THREE.BoxGeometry(1, 1, 1);
 const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
@@ -39,7 +45,8 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
 // Animate
 const tick = () => {
-  // Update objects
+  // Update controls
+  controls.update();
 
   // Render
   renderer.render(scene, camera);
