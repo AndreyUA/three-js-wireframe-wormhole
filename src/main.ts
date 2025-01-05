@@ -1,7 +1,6 @@
 import "./style.css";
 
 import * as THREE from "three";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
@@ -29,11 +28,6 @@ const camera = new THREE.PerspectiveCamera(
 );
 camera.position.z = 5;
 scene.add(camera);
-
-// Controls
-const controls = new OrbitControls(camera, canvas);
-controls.enableDamping = true;
-controls.dampingFactor = 0.03;
 
 // Renderer
 const renderer = new THREE.WebGLRenderer({
@@ -126,10 +120,6 @@ const updateCameraPosition = (time: number) => {
 const tick: FrameRequestCallback = (time: number) => {
   updateCameraPosition(time);
   composer.render(time);
-  controls.update();
-
-  // Update controls
-  controls.update();
 
   // Call tick again on the next frame
   globalThis.requestAnimationFrame(tick);
