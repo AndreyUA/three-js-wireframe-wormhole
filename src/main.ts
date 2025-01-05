@@ -11,8 +11,8 @@ const canvas = document.querySelector("canvas.webgl") as HTMLCanvasElement;
 
 // Sizes
 const sizes = {
-  width: window.innerWidth,
-  height: window.innerHeight,
+  width: globalThis.innerWidth,
+  height: globalThis.innerHeight,
 };
 
 // Scene
@@ -52,7 +52,7 @@ const renderer = new THREE.WebGLRenderer({
   canvas: canvas,
 });
 renderer.setSize(sizes.width, sizes.height);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setPixelRatio(Math.min(globalThis.devicePixelRatio, 2));
 // TODO: read more about these
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 // TODO: read more about these
@@ -139,6 +139,9 @@ const tick: FrameRequestCallback = (time: number) => {
   updateCameraPosition(time);
   composer.render(time);
 
+  // Update crosshair
+  crosshairGroup.position.set(mousePosition.x, mousePosition.y, -1);
+
   // Call tick again on the next frame
   globalThis.requestAnimationFrame(tick);
 };
@@ -146,8 +149,8 @@ const tick: FrameRequestCallback = (time: number) => {
 // Resize event listener
 const resizeHandler = () => {
   // Update sizes
-  sizes.width = window.innerWidth;
-  sizes.height = window.innerHeight;
+  sizes.width = globalThis.innerWidth;
+  sizes.height = globalThis.innerHeight;
 
   // Update camera
   camera.aspect = sizes.width / sizes.height;
@@ -155,8 +158,23 @@ const resizeHandler = () => {
 
   // Update renderer
   renderer.setSize(sizes.width, sizes.height);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setPixelRatio(Math.min(globalThis.devicePixelRatio, 2));
 };
-window.addEventListener("resize", resizeHandler);
+
+// Mouse move event listener
+const mouseMoveHandler = (event: MouseEvent) => {
+  const aspectRatio = sizes.width / sizes.height;
+  const fudge = {
+    x: aspectRatio * 0.75,
+    y: aspectRatio * 0.5,
+  };
+
+  mousePosition.x = ((event.clientX / sizes.width) * 2 - 1) * fudge.x;
+  mousePosition.y = (-(event.clientY / sizes.height) * 2 + 1) * fudge.y;
+};
+
+// Event listeners
+globalThis.addEventListener("resize", resizeHandler);
+globalThis.addEventListener("mousemove", mouseMoveHandler);
 
 tick(0);
