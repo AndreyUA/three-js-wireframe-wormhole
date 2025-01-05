@@ -47,6 +47,45 @@ for (let i = 0; i < 4; i++) {
   crosshairGroup.add(line);
 }
 
+// Lasers
+const lasers: Array<
+  THREE.Mesh<
+    THREE.IcosahedronGeometry,
+    THREE.MeshBasicMaterial,
+    THREE.Object3DEventMap
+  >
+> = [];
+const laserGeometry = new THREE.IcosahedronGeometry(0.05, 1);
+const getLaserBolt = () => {
+  const laserMaterial = new THREE.MeshBasicMaterial({
+    color: 0xffcc00,
+    transparent: true,
+    fog: false,
+  });
+  const laser = new THREE.Mesh(laserGeometry, laserMaterial);
+  laser.position.copy(camera.position);
+
+  let active = true;
+  let speed = 0.5;
+
+  let goalPosition = camera.position
+    .clone()
+    .setFromMatrixPosition(crosshairGroup.matrixWorld);
+
+  const laserDirection = new THREE.Vector3(0, 0, 0);
+  laserDirection
+    .subVectors(laser.position, goalPosition)
+    .normalize()
+    .multiplyScalar(speed);
+
+  const update = () => {
+    laser.position.sub(laserDirection);
+  };
+  laser.userData = { active, update };
+
+  return laser;
+};
+
 // Renderer
 const renderer = new THREE.WebGLRenderer({
   canvas: canvas,
@@ -142,6 +181,10 @@ const tick: FrameRequestCallback = (time: number) => {
   // Update crosshair
   crosshairGroup.position.set(mousePosition.x, mousePosition.y, -1);
 
+  // Update lasers
+  lasers.forEach((laser) => laser.userData.update());
+  // TODO: if laser is out of bounds, remove it from the scene
+
   // Call tick again on the next frame
   globalThis.requestAnimationFrame(tick);
 };
@@ -173,8 +216,15 @@ const mouseMoveHandler = (event: MouseEvent) => {
   mousePosition.y = (-(event.clientY / sizes.height) * 2 + 1) * fudge.y;
 };
 
+const clickHandler = (_event: MouseEvent) => {
+  const laser = getLaserBolt();
+  lasers.push(laser);
+  scene.add(laser);
+};
+
 // Event listeners
 globalThis.addEventListener("resize", resizeHandler);
 globalThis.addEventListener("mousemove", mouseMoveHandler);
+globalThis.addEventListener("click", clickHandler);
 
 tick(0);
