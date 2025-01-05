@@ -47,6 +47,12 @@ for (let i = 0; i < 4; i++) {
   crosshairGroup.add(line);
 }
 
+const raycaster = new THREE.Raycaster();
+const direction = new THREE.Vector3();
+const impactPosition = new THREE.Vector3();
+const impactColor = new THREE.Color();
+let impactBox: any = null;
+
 // Lasers
 const lasers: Array<
   THREE.Mesh<
@@ -78,8 +84,54 @@ const getLaserBolt = () => {
     .normalize()
     .multiplyScalar(speed);
 
+  direction.subVectors(goalPosition, camera.position);
+  raycaster.set(camera.position, direction);
+  let intersects = raycaster.intersectObjects(
+    [...boxGroup.children, tubeHitArea],
+    true
+  );
+
+  if (intersects.length > 0) {
+    impactPosition.copy(intersects[0].point);
+    // @ts-ignore
+    // TODO: fix this
+    impactColor.copy(intersects[0].object.material.color);
+    if (intersects[0].object.name === "box") {
+      impactBox = intersects[0].object.userData.box;
+      boxGroup.remove(intersects[0].object);
+    }
+  }
+
+  let scale = 1;
+  let opacity = 1;
+  let isExploding = false;
+
   const update = () => {
-    laser.position.sub(laserDirection);
+    if (active === true) {
+      if (isExploding === false) {
+        laser.position.sub(laserDirection);
+
+        if (laser.position.distanceTo(impactPosition) < 0.5) {
+          laser.position.copy(impactPosition);
+          laser.material.color.set(impactColor);
+          isExploding = true;
+          impactBox?.scale.setScalar(0.0);
+        }
+      } else {
+        if (opacity > 0.01) {
+          scale += 0.2;
+          opacity *= 0.85;
+        } else {
+          opacity = 0;
+          scale = 0.01;
+          active = false;
+        }
+
+        laser.scale.setScalar(scale);
+        laser.material.opacity = opacity;
+        laser.userData.active = active;
+      }
+    }
   };
   laser.userData = { active, update };
 
