@@ -54,7 +54,7 @@ const impactColor = new THREE.Color();
 let impactBox: any = null;
 
 // Lasers
-const lasers: Array<
+let lasers: Array<
   THREE.Mesh<
     THREE.IcosahedronGeometry,
     THREE.MeshBasicMaterial,
@@ -285,6 +285,11 @@ const clickHandler = (_event: MouseEvent) => {
   const laser = getLaserBolt();
   lasers.push(laser);
   scene.add(laser);
+
+  // Clean up old lasers
+  const inactiveLasers = lasers.filter((laser) => !laser.userData.active);
+  scene.remove(...inactiveLasers);
+  lasers = lasers.filter((laser) => laser.userData.active);
 };
 
 // Event listeners
