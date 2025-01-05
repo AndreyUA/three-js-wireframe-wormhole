@@ -117,49 +117,62 @@ const composer = new EffectComposer(renderer);
 composer.addPass(renderScene);
 composer.addPass(bloomPass);
 
-// Create a line geometry from the spline
-const points = spline.getPoints(100);
-const geometry = new THREE.BufferGeometry().setFromPoints(points);
-const material = new THREE.LineBasicMaterial({ color: 0xff0000 });
-const line = new THREE.Line(geometry, material);
-// scene.add(line);
-
 // Create a tube geometry from the spline
 const tubeGeo = new THREE.TubeGeometry(spline, 222, 0.65, 16, true);
 
 // Create edges geometry from the spline
+const tubeColor = 0xff0000;
 const edges = new THREE.EdgesGeometry(tubeGeo, 0.2);
-const lineMat = new THREE.LineBasicMaterial({ color: 0xff0000 });
+const lineMat = new THREE.LineBasicMaterial({ color: tubeColor });
 const tubeLines = new THREE.LineSegments(edges, lineMat);
 scene.add(tubeLines);
+// Create an invisible hit area for the tube
+const hitMaterial = new THREE.MeshBasicMaterial({
+  color: tubeColor,
+  transparent: true,
+  opacity: 0,
+  side: THREE.BackSide,
+});
+const tubeHitArea = new THREE.Mesh(tubeGeo, hitMaterial);
+scene.add(tubeHitArea);
 
+const boxGroup = new THREE.Group();
+scene.add(boxGroup);
 const numBoxes = 55;
 const size = 0.075;
 const boxGeo = new THREE.BoxGeometry(size, size, size);
 for (let i = 0; i < numBoxes; i += 1) {
-  const boxMat = new THREE.MeshBasicMaterial({
-    color: 0xffffff,
-    wireframe: true,
-  });
-  const box = new THREE.Mesh(boxGeo, boxMat);
   const p = (i / numBoxes + Math.random() * 0.1) % 1;
   const pos = tubeGeo.parameters.path.getPointAt(p);
+
+  const color = new THREE.Color().setHSL(0.7 - p, 1, 0.5);
+
+  const boxMat = new THREE.MeshBasicMaterial({
+    color,
+    transparent: true,
+    opacity: 0,
+  });
+  const hitBox = new THREE.Mesh(boxGeo, boxMat);
+  hitBox.name = "box";
+
   pos.x += Math.random() - 0.4;
   pos.z += Math.random() - 0.4;
-  box.position.copy(pos);
+  hitBox.position.copy(pos);
   const rote = new THREE.Vector3(
     Math.random() * Math.PI,
     Math.random() * Math.PI,
     Math.random() * Math.PI
   );
-  box.rotation.set(rote.x, rote.y, rote.z);
+  hitBox.rotation.set(rote.x, rote.y, rote.z);
   const edges = new THREE.EdgesGeometry(boxGeo, 0.2);
-  const color = new THREE.Color().setHSL(0.7 - p, 1, 0.5);
   const lineMat = new THREE.LineBasicMaterial({ color });
   const boxLines = new THREE.LineSegments(edges, lineMat);
   boxLines.position.copy(pos);
   boxLines.rotation.set(rote.x, rote.y, rote.z);
-  // scene.add(box);
+
+  hitBox.userData.box = boxLines;
+
+  boxGroup.add(hitBox);
   scene.add(boxLines);
 }
 
