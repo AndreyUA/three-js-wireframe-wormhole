@@ -281,7 +281,7 @@ const mouseMoveHandler = (event: MouseEvent) => {
   mousePosition.y = (-(event.clientY / sizes.height) * 2 + 1) * fudge.y;
 };
 
-const clickHandler = (_event: MouseEvent) => {
+const clickHandler = (_event: MouseEvent | any) => {
   const laser = getLaserBolt();
   lasers.push(laser);
   scene.add(laser);
@@ -292,9 +292,24 @@ const clickHandler = (_event: MouseEvent) => {
   lasers = lasers.filter((laser) => laser.userData.active);
 };
 
+const touchHandler = (event: TouchEvent) => {
+  for (let i = 0; i < event.touches.length; i++) {
+    const touch = event.touches[i];
+    const x = touch.clientX;
+    const y = touch.clientY;
+
+    mouseMoveHandler({ clientX: x, clientY: y } as MouseEvent);
+  }
+};
+
 // Event listeners
 globalThis.addEventListener("resize", resizeHandler);
 globalThis.addEventListener("mousemove", mouseMoveHandler);
 globalThis.addEventListener("click", clickHandler);
+// Touch events listeners
+globalThis.addEventListener("touchstart", touchHandler);
+globalThis.addEventListener("touchmove", touchHandler);
+globalThis.addEventListener("touchend", touchHandler);
+globalThis.addEventListener("touchcancel", touchHandler);
 
 tick(0);
